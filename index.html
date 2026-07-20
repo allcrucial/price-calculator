@@ -647,7 +647,7 @@ function rowsToPriceList(rows){
   const idx = {
     item: header.findIndex(h=>h.includes('item')),
     size: header.findIndex(h=>h.includes('size')),
-    moq: header.findIndex(h=>h.includes('moq')),
+    moq: header.findIndex(h=>h.includes('moq') || h.includes('quantity') || h.includes('qty')),
     price: header.findIndex(h=>h.includes('price')),
   };
   if(idx.item===-1 || idx.size===-1 || idx.moq===-1 || idx.price===-1){

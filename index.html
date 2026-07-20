@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wholesale Order Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF9F5;
+    --paper-dim:#F1EFE8;
+    --ink:#1E1D1A;
+    --ink-soft:#6B6A62;
+    --line:#D9D6C9;
+    --rust:#B24C2E;
+    --rust-dim:#E9DCD3;
+    --green:#4B6B4F;
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:6px;
+  }
+  .brand{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  h1{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:26px;
+    margin:2px 0 0;
+    letter-spacing:-0.01em;
+  }
+  .rev{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:right;
+  }
+
+  .section-label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--rust);
+    margin:34px 0 10px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .section-label::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  /* Sync panel */
+  .sync-panel{
+    border:1px solid var(--line);
+    background:var(--paper-dim);
+    padding:14px 16px;
+  }
+  .sync-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:10px;
+    align-items:end;
+  }
+  .sync-field label{
+    display:block;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .sync-field input{
+    width:100%;
+    font-family:var(--mono);
+    font-size:13px;
+    padding:8px 9px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .sync-field input:focus{outline:none;border-color:var(--rust);}
+  .sync-btn{
+    font-family:var(--mono);
+    font-size:12px;
+    background:var(--ink);
+    color:var(--paper);
+    border:1px solid var(--ink);
+    padding:9px 16px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .sync-btn:hover{background:var(--rust);border-color:var(--rust);}
+  .sync-btn:disabled{opacity:.5;cursor:default;}
+  .sync-status{
+    font-family:var(--mono);
+    font-size:11px;
+    margin-top:10px;
+    color:var(--ink-soft);
+  }
+  .sync-status.ok{color:var(--green);}
+  .sync-status.err{color:var(--rust);}
+  .sync-help{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    line-height:1.5;
+  }
+  .paste-fallback{
+    margin-top:12px;
+    display:none;
+  }
+  .paste-fallback.show{display:block;}
+  .paste-fallback textarea{
+    width:100%;
+    min-height:90px;
+    font-family:var(--mono);
+    font-size:12px;
+    padding:9px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    resize:vertical;
+  }
+  .paste-fallback textarea:focus{outline:none;border-color:var(--rust);}
+
+  /* Price list */
+  details{
+    border:1px solid var(--line);
+    background:var(--paper-dim);
+  }
+  summary{
+    cursor:pointer;
+    padding:12px 16px;
+    font-family:var(--mono);
+    font-size:13px;
+    font-weight:600;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    list-style:none;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary .hint{font-weight:400;color:var(--ink-soft);text-transform:none;letter-spacing:0;font-family:var(--sans);}
+  .price-list-body{padding:0 16px 16px;}
+
+  table{width:100%;border-collapse:collapse;}
+  .plist th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:8px 6px;
+    border-bottom:1px solid var(--line);
+  }
+  .plist td{
+    padding:5px 6px;
+    border-bottom:1px solid var(--line);
+  }
+  .plist input{
+    width:100%;
+    border:1px solid transparent;
+    background:transparent;
+    font-family:var(--mono);
+    font-size:13px;
+    padding:4px 5px;
+    color:var(--ink);
+  }
+  .plist input:hover{border-color:var(--line);}
+  .plist input:focus{outline:none;border-color:var(--rust);background:var(--paper);}
+  .plist .num{text-align:right;}
+  .row-del{
+    background:none;border:none;cursor:pointer;color:var(--ink-soft);
+    font-family:var(--mono);font-size:15px;padding:2px 6px;
+  }
+  .row-del:hover{color:var(--rust);}
+  .plist-actions{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+  .add-row{
+    font-family:var(--mono);font-size:12px;background:none;border:1px dashed var(--ink-soft);
+    color:var(--ink);padding:6px 12px;cursor:pointer;
+  }
+  .add-row:hover{border-color:var(--rust);color:var(--rust);}
+  .csv-note{font-size:11px;color:var(--ink-soft);}
+
+  /* Order table */
+  .order-table{border:1px solid var(--line);}
+  .order-head, .order-row{
+    display:grid;
+    grid-template-columns:1.6fr 1.1fr .85fr 1fr .8fr 1fr 32px;
+    gap:0;
+    align-items:center;
+  }
+  .order-head{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    background:var(--paper-dim);
+    border-bottom:1px solid var(--line);
+  }
+  .order-head div, .order-row > div{padding:10px 10px;}
+  .order-row{border-bottom:1px solid var(--line);}
+  .order-row:last-child{border-bottom:none;}
+
+  select, .qty-input{
+    width:100%;
+    font-family:var(--sans);
+    font-size:13px;
+    padding:7px 8px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .qty-input{font-family:var(--mono);text-align:right;}
+  select:focus, .qty-input:focus{outline:none;border-color:var(--rust);}
+
+  .price-cell, .subtotal-cell{
+    font-family:var(--mono);
+    font-size:13px;
+    text-align:right;
+  }
+  .discount-cell{
+    font-family:var(--mono);
+    font-size:13px;
+    text-align:right;
+  }
+  .discount-cell.has-discount{color:var(--green);}
+  .flag{color:var(--rust);font-size:11px;}
+
+  .del-line{
+    background:none;border:none;cursor:pointer;color:var(--ink-soft);
+    font-family:var(--mono);font-size:16px;
+  }
+  .del-line:hover{color:var(--rust);}
+
+  .add-line-wrap{padding:12px;}
+  .add-line{
+    width:100%;
+    font-family:var(--mono);
+    font-size:12px;
+    background:none;
+    border:1px dashed var(--ink-soft);
+    padding:10px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .add-line:hover{border-color:var(--rust);color:var(--rust);}
+
+  /* Total */
+  .total-strip{
+    margin-top:0;
+    border:1px solid var(--ink);
+    border-top:none;
+    background:var(--ink);
+    color:var(--paper);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px 18px;
+  }
+  .total-label{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:#c9c7bb;
+  }
+  .total-value{
+    font-family:var(--mono);
+    font-size:26px;
+    font-weight:600;
+    letter-spacing:-.01em;
+  }
+  .total-sub{
+    font-family:var(--mono);
+    font-size:11px;
+    color:#c9c7bb;
+    margin-top:2px;
+  }
+
+  @media (max-width:720px){
+    .order-head{display:none;}
+    .order-row{
+      grid-template-columns:1fr 1fr;
+      padding:10px 10px 4px;
+      row-gap:6px;
+    }
+    .order-row > div{padding:0;}
+    .order-row .label{
+      font-family:var(--mono);font-size:9px;text-transform:uppercase;
+      color:var(--ink-soft);margin-bottom:3px;letter-spacing:.08em;
+    }
+    .order-row .del-line{grid-column:1/-1;justify-self:end;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand">Order Sheet · Wholesale</div>
+      <h1>Price Calculator</h1>
+    </div>
+    <div class="rev">v1.0<br>per-unit pricing</div>
+  </header>
+
+  <div class="section-label">Sync source</div>
+  <div class="sync-panel">
+    <div class="sync-grid">
+      <div class="sync-field">
+        <label>Google Sheet ID</label>
+        <input id="sheetId" placeholder="from the sheet URL, between /d/ and /edit">
+      </div>
+      <div class="sync-field">
+        <label>Tab name</label>
+        <input id="sheetTab" placeholder="wholesale combined" value="wholesale combined">
+      </div>
+      <button class="sync-btn" id="syncBtn">Sync now</button>
+    </div>
+    <div class="sync-status" id="syncStatus">Not synced yet — enter your sheet ID above.</div>
+    <div class="sync-help">
+      Sheet must be shared as "Anyone with the link — Viewer." The ID is the long string in your sheet's URL:
+      docs.google.com/spreadsheets/d/<strong>THIS_PART</strong>/edit. Columns should be headed item, size, MOQ, price (any order).
+    </div>
+    <div class="paste-fallback" id="pasteFallback">
+      <div class="sync-help" style="margin-top:0;color:var(--rust);">
+        Direct sync didn't go through — this can happen depending on where this page is hosted. Paste the data instead: open your sheet, select the item/size/MOQ/price columns (including headers), copy, and paste here.
+      </div>
+      <textarea id="pasteArea" placeholder="Paste copied cells from Google Sheets here (tab-separated)"></textarea>
+      <button class="sync-btn" id="pasteBtn" style="margin-top:8px;">Use pasted data</button>
+    </div>
+  </div>
+
+  <div class="section-label">Price list</div>
+  <details id="priceListDetails">
+    <summary>Item · size · MOQ · price <span class="hint">— edit this to match your "wholesale combined" sheet</span></summary>
+    <div class="price-list-body">
+      <table class="plist">
+        <thead>
+          <tr>
+            <th style="width:32%">Item</th>
+            <th style="width:22%">Size</th>
+            <th style="width:16%">MOQ</th>
+            <th style="width:18%">Price / unit</th>
+            <th style="width:6%"></th>
+          </tr>
+        </thead>
+        <tbody id="plistBody"></tbody>
+      </table>
+      <div class="plist-actions">
+        <button class="add-row" id="addPlistRow">+ add price tier</button>
+        <span class="csv-note">Changes here update the dropdowns and pricing below instantly.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="section-label">Order</div>
+  <div class="order-table">
+    <div class="order-head">
+      <div>Item</div>
+      <div>Size</div>
+      <div>Qty</div>
+      <div>Price / unit</div>
+      <div>Discount</div>
+      <div>Subtotal</div>
+      <div></div>
+    </div>
+    <div id="orderBody"></div>
+    <div class="add-line-wrap">
+      <button class="add-line" id="addOrderLine">+ add item</button>
+    </div>
+  </div>
+
+  <div class="total-strip">
+    <div>
+      <div class="total-label">Order total</div>
+      <div class="total-sub" id="lineCountNote">0 line items</div>
+    </div>
+    <div class="total-value" id="grandTotal">$0.00</div>
+  </div>
+
+</div>
+
+<script>
+// ---------- Sample data (replace with your real "wholesale combined" catalog) ----------
+let priceList = [
+  { item:'Canvas Tote', size:'Small', moq:1,   price:8.50 },
+  { item:'Canvas Tote', size:'Small', moq:50,  price:6.75 },
+  { item:'Canvas Tote', size:'Small', moq:200, price:5.20 },
+  { item:'Canvas Tote', size:'Large', moq:1,   price:11.00 },
+  { item:'Canvas Tote', size:'Large', moq:50,  price:8.90 },
+  { item:'Canvas Tote', size:'Large', moq:200, price:7.10 },
+  { item:'Ceramic Mug', size:'12oz',  moq:1,   price:4.20 },
+  { item:'Ceramic Mug', size:'12oz',  moq:100, price:3.10 },
+  { item:'Ceramic Mug', size:'12oz',  moq:500, price:2.35 },
+  { item:'Wool Beanie', size:'One Size', moq:1,   price:9.75 },
+  { item:'Wool Beanie', size:'One Size', moq:75,  price:7.40 },
+];
+
+let orderLines = [
+  { item:'Canvas Tote', size:'Small', qty:60 },
+];
+
+const plistBody = document.getElementById('plistBody');
+const orderBody = document.getElementById('orderBody');
+const addPlistRowBtn = document.getElementById('addPlistRow');
+const addOrderLineBtn = document.getElementById('addOrderLine');
+const grandTotalEl = document.getElementById('grandTotal');
+const lineCountNote = document.getElementById('lineCountNote');
+
+function fmtMoney(n){
+  if(isNaN(n)) return '—';
+  return '$' + n.toFixed(2);
+}
+
+function uniqueItems(){
+  return [...new Set(priceList.map(r=>r.item))].filter(Boolean).sort();
+}
+function sizesForItem(item){
+  return [...new Set(priceList.filter(r=>r.item===item).map(r=>r.size))].filter(Boolean).sort();
+}
+
+// best tier: highest MOQ <= qty, for a given item+size
+function matchTier(item, size, qty){
+  const tiers = priceList
+    .filter(r=>r.item===item && r.size===size && Number(r.moq)<=Number(qty))
+    .sort((a,b)=>Number(a.moq)-Number(b.moq));
+  if(tiers.length===0) return null;
+  return tiers[tiers.length-1];
+}
+function baseTier(item, size){
+  const tiers = priceList
+    .filter(r=>r.item===item && r.size===size)
+    .sort((a,b)=>Number(a.moq)-Number(b.moq));
+  return tiers[0] || null;
+}
+
+// ---------- Render price list editor ----------
+function renderPriceList(){
+  plistBody.innerHTML = '';
+  priceList.forEach((row, i)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input value="${row.item}" data-field="item" data-i="${i}"></td>
+      <td><input value="${row.size}" data-field="size" data-i="${i}"></td>
+      <td><input class="num" type="number" min="1" value="${row.moq}" data-field="moq" data-i="${i}"></td>
+      <td><input class="num" type="number" step="0.01" min="0" value="${row.price}" data-field="price" data-i="${i}"></td>
+      <td><button class="row-del" data-i="${i}" title="Remove tier">×</button></td>
+    `;
+    plistBody.appendChild(tr);
+  });
+
+  plistBody.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const i = +e.target.dataset.i;
+      const field = e.target.dataset.field;
+      let val = e.target.value;
+      if(field==='moq' || field==='price') val = val === '' ? 0 : parseFloat(val);
+      priceList[i][field] = val;
+      renderOrder(); // dropdowns/prices may depend on this
+    });
+  });
+  plistBody.querySelectorAll('.row-del').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const i = +e.target.dataset.i;
+      priceList.splice(i,1);
+      renderPriceList();
+      renderOrder();
+    });
+  });
+}
+
+addPlistRowBtn.addEventListener('click', ()=>{
+  priceList.push({item:'', size:'', moq:1, price:0});
+  renderPriceList();
+});
+
+// ---------- Render order lines ----------
+function renderOrder(){
+  orderBody.innerHTML = '';
+  const items = uniqueItems();
+  let grandTotal = 0;
+
+  orderLines.forEach((line, i)=>{
+    if(!items.includes(line.item)) line.item = items[0] || '';
+    const sizes = sizesForItem(line.item);
+    if(!sizes.includes(line.size)) line.size = sizes[0] || '';
+
+    const tier = matchTier(line.item, line.size, line.qty);
+    const base = baseTier(line.item, line.size);
+
+    let priceDisplay = '—';
+    let discountDisplay = '—';
+    let subtotalDisplay = '—';
+    let discountClass = '';
+    let flag = '';
+
+    if(tier){
+      priceDisplay = fmtMoney(tier.price);
+      const subtotal = tier.price * (Number(line.qty)||0);
+      subtotalDisplay = fmtMoney(subtotal);
+      grandTotal += subtotal;
+      if(base && base.price > 0){
+        const disc = 1 - (tier.price / base.price);
+        discountDisplay = disc > 0.0001 ? (disc*100).toFixed(1)+'% off' : 'base price';
+        if(disc > 0.0001) discountClass = 'has-discount';
+      }
+    } else if(line.item && line.size) {
+      flag = 'Below min. MOQ';
+    }
+
+    const row = document.createElement('div');
+    row.className = 'order-row';
+    row.innerHTML = `
+      <div><span class="label">Item</span>
+        <select data-field="item" data-i="${i}">
+          ${items.map(it=>`<option value="${it}" ${it===line.item?'selected':''}>${it}</option>`).join('')}
+        </select>
+      </div>
+      <div><span class="label">Size</span>
+        <select data-field="size" data-i="${i}">
+          ${sizes.map(s=>`<option value="${s}" ${s===line.size?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div><span class="label">Qty</span>
+        <input class="qty-input" type="number" min="1" value="${line.qty}" data-field="qty" data-i="${i}">
+      </div>
+      <div><span class="label">Price / unit</span>
+        <div class="price-cell">${priceDisplay}${flag?`<div class="flag">${flag}</div>`:''}</div>
+      </div>
+      <div><span class="label">Discount</span>
+        <div class="discount-cell ${discountClass}">${discountDisplay}</div>
+      </div>
+      <div><span class="label">Subtotal</span>
+        <div class="subtotal-cell">${subtotalDisplay}</div>
+      </div>
+      <div><button class="del-line" data-i="${i}" title="Remove line">×</button></div>
+    `;
+    orderBody.appendChild(row);
+  });
+
+  orderBody.querySelectorAll('select, .qty-input').forEach(el=>{
+    el.addEventListener('change', e=>{
+      const i = +e.target.dataset.i;
+      const field = e.target.dataset.field;
+      let val = e.target.value;
+      if(field==='qty') val = val==='' ? 0 : parseFloat(val);
+      orderLines[i][field] = val;
+      if(field==='item'){
+        // reset size to first valid option for new item
+        const s = sizesForItem(val);
+        orderLines[i].size = s[0] || '';
+      }
+      renderOrder();
+    });
+  });
+  orderBody.querySelectorAll('.del-line').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const i = +e.target.dataset.i;
+      orderLines.splice(i,1);
+      renderOrder();
+    });
+  });
+
+  grandTotalEl.textContent = fmtMoney(grandTotal);
+  lineCountNote.textContent = `${orderLines.length} line item${orderLines.length===1?'':'s'}`;
+}
+
+addOrderLineBtn.addEventListener('click', ()=>{
+  const items = uniqueItems();
+  const it = items[0] || '';
+  const sizes = sizesForItem(it);
+  orderLines.push({ item: it, size: sizes[0] || '', qty: 1 });
+  renderOrder();
+});
+
+// ---------- Google Sheets sync ----------
+const sheetIdInput = document.getElementById('sheetId');
+const sheetTabInput = document.getElementById('sheetTab');
+const syncBtn = document.getElementById('syncBtn');
+const syncStatus = document.getElementById('syncStatus');
+const pasteFallback = document.getElementById('pasteFallback');
+const pasteArea = document.getElementById('pasteArea');
+const pasteBtn = document.getElementById('pasteBtn');
+
+function setStatus(msg, cls){
+  syncStatus.textContent = msg;
+  syncStatus.className = 'sync-status' + (cls ? ' '+cls : '');
+}
+
+// Parse delimited text (comma from CSV, or tab from a spreadsheet paste) into rows
+function parseDelimited(text){
+  const delim = text.includes('\t') ? '\t' : ',';
+  const lines = text.trim().split(/\r?\n/).filter(l=>l.length>0);
+  return lines.map(line=>{
+    if(delim === ','){
+      // basic CSV split honoring quoted commas
+      const cells = [];
+      let cur = '', inQuotes = false;
+      for(let i=0;i<line.length;i++){
+        const ch = line[i];
+        if(ch === '"'){ inQuotes = !inQuotes; }
+        else if(ch === ',' && !inQuotes){ cells.push(cur); cur=''; }
+        else{ cur += ch; }
+      }
+      cells.push(cur);
+      return cells.map(c=>c.trim().replace(/^"|"$/g,''));
+    }
+    return line.split('\t').map(c=>c.trim());
+  });
+}
+
+function rowsToPriceList(rows){
+  if(rows.length < 2) throw new Error('No data rows found');
+  const header = rows[0].map(h=>h.toLowerCase().trim());
+  const idx = {
+    item: header.findIndex(h=>h.includes('item')),
+    size: header.findIndex(h=>h.includes('size')),
+    moq: header.findIndex(h=>h.includes('moq')),
+    price: header.findIndex(h=>h.includes('price')),
+  };
+  if(idx.item===-1 || idx.size===-1 || idx.moq===-1 || idx.price===-1){
+    throw new Error('Could not find item/size/MOQ/price columns in the header row');
+  }
+  const out = [];
+  for(let i=1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r[idx.item]) continue;
+    out.push({
+      item: r[idx.item] || '',
+      size: r[idx.size] || '',
+      moq: parseFloat(r[idx.moq]) || 0,
+      price: parseFloat(String(r[idx.price]).replace(/[^0-9.-]/g,'')) || 0,
+    });
+  }
+  if(out.length===0) throw new Error('No valid rows parsed');
+  return out;
+}
+
+async function saveSettings(){
+  try{
+    await window.storage.set('sheet-settings', JSON.stringify({
+      sheetId: sheetIdInput.value.trim(),
+      sheetTab: sheetTabInput.value.trim(),
+    }));
+  }catch(e){ /* non-fatal */ }
+}
+async function saveCache(list){
+  try{
+    await window.storage.set('price-list-cache', JSON.stringify({
+      data: list,
+      syncedAt: new Date().toISOString(),
+    }));
+  }catch(e){ /* non-fatal */ }
+}
+async function loadSaved(){
+  try{
+    const s = await window.storage.get('sheet-settings');
+    if(s && s.value){
+      const parsed = JSON.parse(s.value);
+      sheetIdInput.value = parsed.sheetId || '';
+      sheetTabInput.value = parsed.sheetTab || 'wholesale combined';
+    }
+  }catch(e){ /* no saved settings yet */ }
+  try{
+    const c = await window.storage.get('price-list-cache');
+    if(c && c.value){
+      const parsed = JSON.parse(c.value);
+      if(Array.isArray(parsed.data) && parsed.data.length){
+        priceList = parsed.data;
+        const when = new Date(parsed.syncedAt);
+        setStatus(`Loaded cached data from last sync: ${when.toLocaleString()}`, 'ok');
+      }
+    }
+  }catch(e){ /* no cache yet */ }
+}
+
+async function doSync(){
+  const id = sheetIdInput.value.trim();
+  const tab = sheetTabInput.value.trim() || 'wholesale combined';
+  if(!id){
+    setStatus('Enter your Google Sheet ID first.', 'err');
+    return;
+  }
+  syncBtn.disabled = true;
+  setStatus('Syncing…');
+  pasteFallback.classList.remove('show');
+
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(id)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    if(text.trim().startsWith('<')) throw new Error('Sheet not publicly viewable');
+    const rows = parseDelimited(text);
+    const list = rowsToPriceList(rows);
+    priceList = list;
+    renderPriceList();
+    renderOrder();
+    await saveSettings();
+    await saveCache(list);
+    setStatus(`Synced ${list.length} price tier${list.length===1?'':'s'} — ${new Date().toLocaleString()}`, 'ok');
+  }catch(err){
+    setStatus('Direct sync failed: ' + err.message + '. Use the paste option below.', 'err');
+    pasteFallback.classList.add('show');
+  }finally{
+    syncBtn.disabled = false;
+  }
+}
+
+syncBtn.addEventListener('click', doSync);
+
+pasteBtn.addEventListener('click', async ()=>{
+  try{
+    const rows = parseDelimited(pasteArea.value);
+    const list = rowsToPriceList(rows);
+    priceList = list;
+    renderPriceList();
+    renderOrder();
+    await saveSettings();
+    await saveCache(list);
+    setStatus(`Loaded ${list.length} price tier${list.length===1?'':'s'} from pasted data — ${new Date().toLocaleString()}`, 'ok');
+    pasteFallback.classList.remove('show');
+    pasteArea.value = '';
+  }catch(err){
+    setStatus('Could not parse pasted data: ' + err.message, 'err');
+  }
+});
+
+// ---------- Init ----------
+(async function init(){
+  renderPriceList();
+  renderOrder();
+  await loadSaved();
+  renderPriceList();
+  renderOrder();
+})();
+</script>
+</body>
+</html>

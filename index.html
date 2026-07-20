@@ -606,6 +606,11 @@ addOrderLineBtn.addEventListener('click', ()=>{
 });
 
 // ---------- Google Sheets sync ----------
+// Your sheet is baked in here so the page auto-syncs on load — update these two lines
+// any time your Sheet ID or tab name changes.
+const DEFAULT_SHEET_ID = '1pYgxGzn8-uF_Hd1Xt2VKOT5A91nHijoiam7azrjlyX8';
+const DEFAULT_SHEET_TAB = 'wholesale combined';
+
 const sheetIdInput = document.getElementById('sheetId');
 const sheetTabInput = document.getElementById('sheetTab');
 const syncBtn = document.getElementById('syncBtn');
@@ -613,6 +618,9 @@ const syncStatus = document.getElementById('syncStatus');
 const pasteFallback = document.getElementById('pasteFallback');
 const pasteArea = document.getElementById('pasteArea');
 const pasteBtn = document.getElementById('pasteBtn');
+
+sheetIdInput.value = DEFAULT_SHEET_ID;
+sheetTabInput.value = DEFAULT_SHEET_TAB;
 
 function setStatus(msg, cls){
   syncStatus.textContent = msg;
@@ -668,44 +676,6 @@ function rowsToPriceList(rows){
   return out;
 }
 
-async function saveSettings(){
-  try{
-    await window.storage.set('sheet-settings', JSON.stringify({
-      sheetId: sheetIdInput.value.trim(),
-      sheetTab: sheetTabInput.value.trim(),
-    }));
-  }catch(e){ /* non-fatal */ }
-}
-async function saveCache(list){
-  try{
-    await window.storage.set('price-list-cache', JSON.stringify({
-      data: list,
-      syncedAt: new Date().toISOString(),
-    }));
-  }catch(e){ /* non-fatal */ }
-}
-async function loadSaved(){
-  try{
-    const s = await window.storage.get('sheet-settings');
-    if(s && s.value){
-      const parsed = JSON.parse(s.value);
-      sheetIdInput.value = parsed.sheetId || '';
-      sheetTabInput.value = parsed.sheetTab || 'wholesale combined';
-    }
-  }catch(e){ /* no saved settings yet */ }
-  try{
-    const c = await window.storage.get('price-list-cache');
-    if(c && c.value){
-      const parsed = JSON.parse(c.value);
-      if(Array.isArray(parsed.data) && parsed.data.length){
-        priceList = parsed.data;
-        const when = new Date(parsed.syncedAt);
-        setStatus(`Loaded cached data from last sync: ${when.toLocaleString()}`, 'ok');
-      }
-    }
-  }catch(e){ /* no cache yet */ }
-}
-
 async function doSync(){
   const id = sheetIdInput.value.trim();
   const tab = sheetTabInput.value.trim() || 'wholesale combined';
@@ -729,8 +699,6 @@ async function doSync(){
     priceList = list;
     renderPriceList();
     renderOrder();
-    await saveSettings();
-    await saveCache(list);
     setStatus(`Synced ${list.length} price tier${list.length===1?'':'s'} — ${new Date().toLocaleString()}`, 'ok');
   }catch(err){
     setStatus('Direct sync failed: ' + err.message + '. Use the paste option below.', 'err');
@@ -749,8 +717,6 @@ pasteBtn.addEventListener('click', async ()=>{
     priceList = list;
     renderPriceList();
     renderOrder();
-    await saveSettings();
-    await saveCache(list);
     setStatus(`Loaded ${list.length} price tier${list.length===1?'':'s'} from pasted data — ${new Date().toLocaleString()}`, 'ok');
     pasteFallback.classList.remove('show');
     pasteArea.value = '';
@@ -760,12 +726,11 @@ pasteBtn.addEventListener('click', async ()=>{
 });
 
 // ---------- Init ----------
-(async function init(){
+(function init(){
   renderPriceList();
   renderOrder();
-  await loadSaved();
-  renderPriceList();
-  renderOrder();
+  // Auto-sync immediately using the sheet baked in above
+  doSync();
 })();
 </script>
 </body>

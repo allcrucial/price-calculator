@@ -1239,8 +1239,20 @@ function buildQuoteDoc(){
   const validUntil = new Date(today.getTime() + 30*24*60*60*1000);
   const fmtDate = d => d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   const pad = (n, len=2) => String(n).padStart(len, '0');
-  const quoteNo = 'Q-' + today.getFullYear() + pad(today.getMonth()+1) + pad(today.getDate())
-    + '-' + pad(today.getHours()) + pad(today.getMinutes()) + pad(today.getSeconds()) + pad(today.getMilliseconds(),3);
+
+  const quoteLines = getValidOrderLines();
+
+  // 9-character quote number: 6-digit date (YYMMDD) + 3-char hash of the items/qty ordered.
+  // Same day + same order contents will always hash the same; a different cart on the
+  // same day produces a different suffix, so quotes stay unique without needing extra length.
+  function hashItems(lines){
+    const str = lines.map(l=>`${l.item}|${l.size}|${l.qty}`).join(';');
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = (h * 31 + str.charCodeAt(i)) >>> 0; }
+    return h.toString(36).toUpperCase().slice(-3).padStart(3,'0');
+  }
+  const yy = String(today.getFullYear()).slice(-2);
+  const quoteNo = yy + pad(today.getMonth()+1) + pad(today.getDate()) + hashItems(quoteLines);
 
   doc.setFont('helvetica','bold');
   doc.setFontSize(18);
@@ -1285,10 +1297,9 @@ function buildQuoteDoc(){
   doc.line(margin, y, pageWidth-margin, y);
   y += 16;
 
-  const lines = getValidOrderLines();
   doc.setFont('helvetica','normal');
   doc.setFontSize(10);
-  lines.forEach(l=>{
+  quoteLines.forEach(l=>{
     if(y > 740){ doc.addPage(); y = 50; } // simple pagination for long orders
     doc.text(String(l.item), colItem, y, { maxWidth: 210 });
     doc.text(String(l.size), colSize, y, { maxWidth: 80 });
@@ -1303,7 +1314,7 @@ function buildQuoteDoc(){
   doc.line(margin, y, pageWidth-margin, y);
   y += 22;
 
-  const total = lines.reduce((sum,l)=>sum+l.subtotal, 0);
+  const total = quoteLines.reduce((sum,l)=>sum+l.subtotal, 0);
   doc.setFont('helvetica','bold');
   doc.setFontSize(13);
   doc.text('TOTAL', colPrice, y);

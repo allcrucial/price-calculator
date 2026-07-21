@@ -615,7 +615,7 @@
 
       <div class="details-actions">
         <button class="btn-secondary" id="backToDetailsBtn">← Back to details</button>
-        <button class="order-cta" id="confirmBtn">Confirm & email order</button>
+        <button class="order-cta" id="confirmBtn">Confirm</button>
       </div>
       <div class="sync-help" style="margin-top:10px;">
         Clicking confirm opens your email app with the order pre-filled to <strong>info@allcrucial.com</strong> — just hit send.
@@ -1193,7 +1193,7 @@ confirmBtn.addEventListener('click', async ()=>{
     fallbackToMailto();
   }finally{
     confirmBtn.disabled = false;
-    confirmBtn.textContent = 'Confirm & email order';
+    confirmBtn.textContent = 'Confirm';
   }
 });
 

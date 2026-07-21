@@ -322,6 +322,135 @@
     }
     .order-row .del-line{grid-column:1/-1;justify-self:end;}
   }
+
+  /* Order CTA + multi-page flow */
+  .order-cta-wrap{margin-top:16px;text-align:right;}
+  .order-cta{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:600;
+    background:var(--rust);
+    color:var(--paper);
+    border:1px solid var(--rust);
+    padding:12px 22px;
+    cursor:pointer;
+  }
+  .order-cta:hover{background:#963d24;}
+  .order-cta-error{
+    color:var(--rust);
+    font-size:12px;
+    font-family:var(--mono);
+    margin-top:8px;
+  }
+
+  .details-panel{
+    border:1px solid var(--line);
+    background:var(--paper-dim);
+    padding:20px;
+  }
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input{
+    width:100%;
+    font-family:var(--sans);
+    font-size:14px;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .field input:focus{outline:none;border-color:var(--rust);}
+
+  .checkbox-row{display:flex;gap:22px;margin-top:4px;}
+  .checkbox-option{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--sans);
+    font-size:14px;
+    cursor:pointer;
+  }
+  .checkbox-option input{width:16px;height:16px;cursor:pointer;}
+
+  .details-error{
+    color:var(--rust);
+    font-size:12px;
+    font-family:var(--mono);
+    min-height:16px;
+    margin:6px 0 4px;
+  }
+  .details-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:10px;
+  }
+  .btn-secondary{
+    font-family:var(--mono);
+    font-size:13px;
+    background:none;
+    border:1px solid var(--ink-soft);
+    color:var(--ink);
+    padding:11px 16px;
+    cursor:pointer;
+  }
+  .btn-secondary:hover{border-color:var(--ink);}
+
+  .review-panel{
+    border:1px solid var(--line);
+    background:var(--paper-dim);
+    padding:20px;
+  }
+  .review-block{
+    margin-bottom:18px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line);
+  }
+  .review-block:last-of-type{border-bottom:none;}
+  .review-label{
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--rust);
+    margin-bottom:8px;
+  }
+  .review-line{
+    font-size:14px;
+    line-height:1.7;
+  }
+  .review-line strong{font-weight:600;}
+  .review-item-row{
+    display:flex;
+    justify-content:space-between;
+    font-family:var(--mono);
+    font-size:13px;
+    padding:5px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .review-item-row:last-child{border-bottom:none;}
+  .review-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:var(--mono);
+    font-size:20px;
+    font-weight:600;
+    padding-top:8px;
+  }
 </style>
 </head>
 <body>
@@ -334,6 +463,8 @@
     </div>
     <div class="rev">v1.0<br>per-unit pricing</div>
   </header>
+
+  <div id="page-order">
 
   <div style="display:none;" id="adminSections">
 
@@ -412,6 +543,97 @@
       <div class="total-sub" id="lineCountNote">0 line items</div>
     </div>
     <div class="total-value" id="grandTotal">$0.00</div>
+  </div>
+
+  <div class="order-cta-wrap">
+    <button class="order-cta" id="orderNowBtn">Order now →</button>
+    <div class="order-cta-error" id="orderNowError"></div>
+  </div>
+
+  </div>
+  <!-- /page-order -->
+
+  <!-- ===== PAGE 2: customer details ===== -->
+  <div id="page-details" style="display:none;">
+
+    <div class="section-label">Your details</div>
+    <div class="details-panel">
+      <div class="field-row">
+        <div class="field">
+          <label>Full name *</label>
+          <input type="text" id="custName" placeholder="Jane Smith">
+        </div>
+        <div class="field">
+          <label>Company name</label>
+          <input type="text" id="custCompany" placeholder="Smith Trading Co.">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Email address *</label>
+          <input type="email" id="custEmail" placeholder="jane@example.com">
+        </div>
+        <div class="field">
+          <label>Phone number *</label>
+          <input type="tel" id="custPhone" placeholder="+1 868 555 0100">
+        </div>
+      </div>
+      <div class="field">
+        <label>Delivery address</label>
+        <input type="text" id="custAddress" placeholder="Street, city, postal code">
+      </div>
+
+      <div class="field">
+        <label>Fulfillment method *</label>
+        <div class="checkbox-row">
+          <label class="checkbox-option">
+            <input type="checkbox" id="methodDelivery"> Delivery
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" id="methodPickup"> Pickup
+          </label>
+        </div>
+      </div>
+
+      <div class="details-error" id="detailsError"></div>
+
+      <div class="details-actions">
+        <button class="btn-secondary" id="backToOrderBtn">← Back to order</button>
+        <button class="order-cta" id="reviewBtn">Review order →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE 3: review & confirm ===== -->
+  <div id="page-review" style="display:none;">
+
+    <div class="section-label">Review your order</div>
+    <div class="review-panel">
+      <div id="reviewCustomer" class="review-block"></div>
+      <div id="reviewItems" class="review-block"></div>
+      <div id="reviewTotal" class="review-total"></div>
+
+      <div class="details-actions">
+        <button class="btn-secondary" id="backToDetailsBtn">← Back to details</button>
+        <button class="order-cta" id="confirmBtn">Confirm & email order</button>
+      </div>
+      <div class="sync-help" style="margin-top:10px;">
+        Clicking confirm opens your email app with the order pre-filled to <strong>info@allcrucial.com</strong> — just hit send.
+      </div>
+    </div>
+  </div>
+  <!-- ===== PAGE 4: success ===== -->
+  <div id="page-success" style="display:none;">
+    <div class="section-label">Order sent</div>
+    <div class="review-panel" style="text-align:center;padding:40px 20px;">
+      <div style="font-family:var(--mono);font-size:15px;color:var(--green);font-weight:600;margin-bottom:10px;">
+        ✓ Your order has been sent to All Crucial
+      </div>
+      <div style="font-size:14px;color:var(--ink-soft);margin-bottom:22px;">
+        We'll be in touch shortly to confirm details.
+      </div>
+      <button class="order-cta" id="newOrderBtn">Start a new order</button>
+    </div>
   </div>
 
 </div>
@@ -788,10 +1010,217 @@ pasteBtn.addEventListener('click', async ()=>{
   }
 });
 
+// ---------- Checkout flow (3-page + success) ----------
+const ORDER_EMAIL = 'info@allcrucial.com';
+// Paste your Formspree form endpoint here once created, e.g. 'https://formspree.io/f/xxxxabcd'
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/meeykbyg';
+
+const pageOrder = document.getElementById('page-order');
+const pageDetails = document.getElementById('page-details');
+const pageReview = document.getElementById('page-review');
+const pageSuccess = document.getElementById('page-success');
+
+const orderNowBtn = document.getElementById('orderNowBtn');
+const orderNowError = document.getElementById('orderNowError');
+const backToOrderBtn = document.getElementById('backToOrderBtn');
+const reviewBtn = document.getElementById('reviewBtn');
+const detailsError = document.getElementById('detailsError');
+const backToDetailsBtn = document.getElementById('backToDetailsBtn');
+const confirmBtn = document.getElementById('confirmBtn');
+const newOrderBtn = document.getElementById('newOrderBtn');
+
+const methodDelivery = document.getElementById('methodDelivery');
+const methodPickup = document.getElementById('methodPickup');
+// Behave like a single choice even though they're checkboxes, per the requested UI
+methodDelivery.addEventListener('change', ()=>{ if(methodDelivery.checked) methodPickup.checked = false; });
+methodPickup.addEventListener('change', ()=>{ if(methodPickup.checked) methodDelivery.checked = false; });
+
+function showPage(page){
+  pageOrder.style.display = page==='order' ? '' : 'none';
+  pageDetails.style.display = page==='details' ? '' : 'none';
+  pageReview.style.display = page==='review' ? '' : 'none';
+  pageSuccess.style.display = page==='success' ? '' : 'none';
+  window.scrollTo(0,0);
+}
+
+// Collect current valid order lines (mirrors the pricing logic used in renderOrder)
+function getValidOrderLines(){
+  const out = [];
+  orderLines.forEach(line=>{
+    const tier = matchTier(line.item, line.size, line.qty);
+    if(tier){
+      out.push({
+        item: line.item,
+        size: line.size,
+        qty: Number(line.qty)||0,
+        price: tier.price,
+        subtotal: tier.price * (Number(line.qty)||0),
+      });
+    }
+  });
+  return out;
+}
+
+orderNowBtn.addEventListener('click', ()=>{
+  const valid = getValidOrderLines();
+  if(valid.length === 0){
+    orderNowError.textContent = 'Add at least one item with a quantity that meets its minimum order (MOQ) before continuing.';
+    return;
+  }
+  orderNowError.textContent = '';
+  showPage('details');
+});
+
+backToOrderBtn.addEventListener('click', ()=> showPage('order'));
+
+reviewBtn.addEventListener('click', ()=>{
+  const name = document.getElementById('custName').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const method = methodDelivery.checked ? 'Delivery' : (methodPickup.checked ? 'Pickup' : '');
+
+  if(!name || !email || !phone || !method){
+    detailsError.textContent = 'Please fill in name, email, phone, and select delivery or pickup.';
+    return;
+  }
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!emailOk){
+    detailsError.textContent = 'Please enter a valid email address.';
+    return;
+  }
+  detailsError.textContent = '';
+  renderReview();
+  showPage('review');
+});
+
+backToDetailsBtn.addEventListener('click', ()=> showPage('details'));
+
+function renderReview(){
+  const name = document.getElementById('custName').value.trim();
+  const company = document.getElementById('custCompany').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  const method = methodDelivery.checked ? 'Delivery' : 'Pickup';
+
+  const reviewCustomer = document.getElementById('reviewCustomer');
+  reviewCustomer.innerHTML = `
+    <div class="review-label">Customer</div>
+    <div class="review-line"><strong>${name}</strong>${company ? ' · '+company : ''}</div>
+    <div class="review-line">${email} · ${phone}</div>
+    ${address ? `<div class="review-line">${address}</div>` : ''}
+    <div class="review-line"><strong>${method}</strong></div>
+  `;
+
+  const lines = getValidOrderLines();
+  const reviewItems = document.getElementById('reviewItems');
+  reviewItems.innerHTML = `
+    <div class="review-label">Items</div>
+    ${lines.map(l=>`
+      <div class="review-item-row">
+        <span>${l.item} — ${l.size} × ${l.qty}</span>
+        <span>${fmtMoney(l.subtotal)}</span>
+      </div>
+    `).join('')}
+  `;
+
+  const total = lines.reduce((sum,l)=>sum+l.subtotal, 0);
+  document.getElementById('reviewTotal').innerHTML = `
+    <span>Total</span><span>${fmtMoney(total)}</span>
+  `;
+}
+
+confirmBtn.addEventListener('click', async ()=>{
+  const name = document.getElementById('custName').value.trim();
+  const company = document.getElementById('custCompany').value.trim();
+  const email = document.getElementById('custEmail').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  const method = methodDelivery.checked ? 'Delivery' : 'Pickup';
+  const lines = getValidOrderLines();
+  const total = lines.reduce((sum,l)=>sum+l.subtotal, 0);
+
+  const itemsSummary = lines
+    .map(l=>`${l.item} (${l.size}) x${l.qty} @ ${fmtMoney(l.price)} = ${fmtMoney(l.subtotal)}`)
+    .join('\n');
+
+  const subject = `Wholesale order — ${name}${company ? ' / '+company : ''}`;
+  const bodyText = [
+    `Customer: ${name}`,
+    company ? `Company: ${company}` : null,
+    `Email: ${email}`,
+    `Phone: ${phone}`,
+    address ? `Address: ${address}` : null,
+    `Fulfillment: ${method}`,
+    ``,
+    `Items:`,
+    itemsSummary,
+    ``,
+    `Order total: ${fmtMoney(total)}`,
+  ].filter(Boolean).join('\n');
+
+  function fallbackToMailto(){
+    const mailtoUrl = `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+    window.location.href = mailtoUrl;
+  }
+
+  if(!FORMSPREE_ENDPOINT || FORMSPREE_ENDPOINT.includes('YOUR_FORM_ID')){
+    // Not configured yet — use the email-app fallback so ordering still works
+    fallbackToMailto();
+    return;
+  }
+
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'Sending…';
+
+  try{
+    const res = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
+      body: JSON.stringify({
+        _subject: subject,
+        name, company, email, phone, address,
+        fulfillment: method,
+        items: itemsSummary,
+        total: fmtMoney(total),
+        message: bodyText,
+      }),
+    });
+    if(!res.ok) throw new Error('Submission failed');
+    showPage('success');
+  }catch(err){
+    // Silent send failed — fall back to opening the customer's email app so the order still goes through
+    fallbackToMailto();
+  }finally{
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Confirm & email order';
+  }
+});
+
+function resetOrderForm(){
+  orderLines = [];
+  addOrderLineBtn.click(); // seeds a single fresh line at qty 1
+  document.getElementById('custName').value = '';
+  document.getElementById('custCompany').value = '';
+  document.getElementById('custEmail').value = '';
+  document.getElementById('custPhone').value = '';
+  document.getElementById('custAddress').value = '';
+  methodDelivery.checked = false;
+  methodPickup.checked = false;
+  orderNowError.textContent = '';
+  detailsError.textContent = '';
+  renderOrder();
+}
+newOrderBtn.addEventListener('click', ()=>{
+  resetOrderForm();
+  showPage('order');
+});
+
 // ---------- Init ----------
 (function init(){
   renderPriceList();
   renderOrder();
+  showPage('order');
   // Auto-sync immediately using the sheet baked in above
   doSync();
 })();

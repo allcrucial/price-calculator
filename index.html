@@ -572,7 +572,12 @@ function renderOrder(){
       </div>
       <div><span class="label">Size</span>
         <select data-field="size" data-i="${i}">
-          ${sizes.map(s=>`<option value="${s}" ${s===line.size?'selected':''}>${s}</option>`).join('')}
+          ${sizes.map(s=>{
+            const inStock = stockSet.has(stockKey(line.item, s));
+            const style = inStock ? 'style="color:#4B6B4F;font-weight:600;"' : '';
+            const label = inStock ? `${s} ●` : s;
+            return `<option value="${s}" ${s===line.size?'selected':''} ${style}>${label}</option>`;
+          }).join('')}
         </select>
       </div>
       <div><span class="label">Qty</span>
@@ -632,6 +637,41 @@ addOrderLineBtn.addEventListener('click', ()=>{
 // any time your Sheet ID or tab name changes.
 const DEFAULT_SHEET_ID = '1pYgxGzn8-uF_Hd1Xt2VKOT5A91nHijoiam7azrjlyX8';
 const DEFAULT_SHEET_TAB = 'wholesale combined';
+const STOCK_TAB = 'stock'; // tab with columns: A = product, B = size
+
+let stockSet = new Set(); // holds "item||size" (lowercased) for anything currently in stock
+
+function stockKey(item, size){
+  return String(item).trim().toLowerCase() + '||' + String(size).trim().toLowerCase();
+}
+
+async function fetchStock(sheetId){
+  const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(STOCK_TAB)}`;
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    if(text.trim().startsWith('<')) throw new Error('not viewable');
+    const rows = parseDelimited(text);
+    if(rows.length < 2) return;
+    const header = rows[0].map(h=>h.toLowerCase().trim());
+    const productIdx = header.findIndex(h=>h.includes('product')) !== -1
+      ? header.findIndex(h=>h.includes('product')) : 0;
+    const sizeIdx = header.findIndex(h=>h.includes('size')) !== -1
+      ? header.findIndex(h=>h.includes('size')) : 1;
+    const set = new Set();
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      if(!r[productIdx]) continue;
+      set.add(stockKey(r[productIdx], r[sizeIdx]));
+    }
+    stockSet = set;
+    renderOrder();
+  }catch(err){
+    // Stock check is a nice-to-have — fail silently so it never blocks pricing sync
+    console.warn('Stock sync skipped:', err.message);
+  }
+}
 
 const sheetIdInput = document.getElementById('sheetId');
 const sheetTabInput = document.getElementById('sheetTab');
@@ -722,6 +762,7 @@ async function doSync(){
     renderPriceList();
     renderOrder();
     setStatus(`Synced ${list.length} price tier${list.length===1?'':'s'} — ${new Date().toLocaleString()}`, 'ok');
+    fetchStock(id); // runs separately; won't block or fail the price sync if the stock tab has issues
   }catch(err){
     setStatus('Direct sync failed: ' + err.message + '. Use the paste option below.', 'err');
     pasteFallback.classList.add('show');

@@ -451,8 +451,26 @@ function fmtMoney(n){
 function uniqueItems(){
   return [...new Set(priceList.map(r=>r.item))].filter(Boolean).sort();
 }
+
+// Extracts a comparable volume value so sizes sort numerically (1L before 4L, 500ml before 1L, etc.)
+// rather than alphabetically. Falls back to a large number (sorts last) for non-numeric sizes.
+function sizeSortValue(sizeStr){
+  const s = String(sizeStr).toLowerCase();
+  const match = s.match(/(\d+(\.\d+)?)/);
+  if(!match) return Infinity;
+  let num = parseFloat(match[1]);
+  if(s.includes('ml')) return num;               // already in millilitres
+  if(s.includes('l')) return num * 1000;          // litres -> millilitres
+  return num;                                      // unitless numbers (e.g. plain sizes) compare as-is
+}
+
 function sizesForItem(item){
-  return [...new Set(priceList.filter(r=>r.item===item).map(r=>r.size))].filter(Boolean).sort();
+  const sizes = [...new Set(priceList.filter(r=>r.item===item).map(r=>r.size))].filter(Boolean);
+  return sizes.sort((a,b)=>{
+    const va = sizeSortValue(a), vb = sizeSortValue(b);
+    if(va !== vb) return va - vb;
+    return a.localeCompare(b); // tie-break alphabetically for equal/non-numeric sizes
+  });
 }
 
 // best tier: highest MOQ <= qty, for a given item+size

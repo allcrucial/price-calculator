@@ -660,7 +660,7 @@ let priceList = [
 ];
 
 let orderLines = [
-  { item:'Canvas Tote', size:'Small', qty:1 },
+  { item:'', size:'', qty:1 },
 ];
 
 const plistBody = document.getElementById('plistBody');
@@ -762,9 +762,9 @@ function renderOrder(){
   let grandTotal = 0;
 
   orderLines.forEach((line, i)=>{
-    if(!items.includes(line.item)) line.item = items[0] || '';
+    if(line.item && !items.includes(line.item)) line.item = '';
     const sizes = sizesForItem(line.item);
-    if(!sizes.includes(line.size)) line.size = sizes[0] || '';
+    if(line.size && !sizes.includes(line.size)) line.size = '';
 
     const tier = matchTier(line.item, line.size, line.qty);
     const base = baseTier(line.item, line.size);
@@ -794,11 +794,13 @@ function renderOrder(){
     row.innerHTML = `
       <div><span class="label">Item</span>
         <select data-field="item" data-i="${i}">
+          <option value="" ${line.item===''?'selected':''}>Select item</option>
           ${items.map(it=>`<option value="${it}" ${it===line.item?'selected':''}>${it}</option>`).join('')}
         </select>
       </div>
       <div><span class="label">Size</span>
         <select data-field="size" data-i="${i}">
+          <option value="" ${line.size===''?'selected':''}>Select size</option>
           ${sizes.map(s=>{
             const inStock = stockSet.has(stockKey(line.item, s));
             const style = inStock ? 'style="color:#4B6B4F;font-weight:600;"' : '';
@@ -832,9 +834,8 @@ function renderOrder(){
       if(field==='qty') val = val==='' ? 0 : parseFloat(val);
       orderLines[i][field] = val;
       if(field==='item'){
-        // reset size to first valid option for new item
-        const s = sizesForItem(val);
-        orderLines[i].size = s[0] || '';
+        // reset size to placeholder when the item changes
+        orderLines[i].size = '';
       }
       renderOrder();
     });
@@ -852,10 +853,7 @@ function renderOrder(){
 }
 
 addOrderLineBtn.addEventListener('click', ()=>{
-  const items = uniqueItems();
-  const it = items[0] || '';
-  const sizes = sizesForItem(it);
-  orderLines.push({ item: it, size: sizes[0] || '', qty: 1 });
+  orderLines.push({ item:'', size:'', qty:1 });
   renderOrder();
 });
 

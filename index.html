@@ -617,8 +617,8 @@
       <div class="details-actions">
         <button class="btn-secondary" id="backToDetailsBtn">← Back to details</button>
         <div style="display:flex;gap:10px;">
-          <button class="btn-secondary" id="exportQuoteBtn">Export quote (PDF)</button>
-          <button class="order-cta" id="confirmBtn">Confirm</button>
+          <button class="btn-secondary" id="exportQuoteBtn">Export Quote</button>
+          <button class="order-cta" id="confirmBtn">Confirm Order</button>
         </div>
       </div>
       <div class="details-error" id="quoteError" style="text-align:right;"></div>
@@ -1199,7 +1199,7 @@ confirmBtn.addEventListener('click', async ()=>{
     fallbackToMailto();
   }finally{
     confirmBtn.disabled = false;
-    confirmBtn.textContent = 'Confirm';
+    confirmBtn.textContent = 'Confirm Order';
   }
 });
 
@@ -1238,7 +1238,9 @@ function buildQuoteDoc(){
   const today = new Date();
   const validUntil = new Date(today.getTime() + 30*24*60*60*1000);
   const fmtDate = d => d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
-  const quoteNo = 'Q-' + today.getFullYear() + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0') + '-' + Math.floor(Math.random()*900+100);
+  const pad = (n, len=2) => String(n).padStart(len, '0');
+  const quoteNo = 'Q-' + today.getFullYear() + pad(today.getMonth()+1) + pad(today.getDate())
+    + '-' + pad(today.getHours()) + pad(today.getMinutes()) + pad(today.getSeconds()) + pad(today.getMilliseconds(),3);
 
   doc.setFont('helvetica','bold');
   doc.setFontSize(18);
@@ -1313,7 +1315,7 @@ function buildQuoteDoc(){
   doc.setTextColor(110,110,105);
   doc.text('This quotation is valid for 30 days from the date of issue. Prices are subject to change thereafter.', margin, y);
   y += 12;
-  doc.text(`${COMPANY_NAME}  ·  ${COMPANY_ADDRESS}  ·  ${COMPANY_EMAIL}  ·  ${COMPANY_PHONE}`, margin, y);
+  doc.text('Payment terms: 30 day payment.', margin, y);
 
   return { doc, quoteNo, name, company };
 }
@@ -1363,7 +1365,7 @@ exportQuoteBtn.addEventListener('click', async ()=>{
     quoteError.textContent = 'Could not generate the PDF: ' + err.message;
   }finally{
     exportQuoteBtn.disabled = false;
-    exportQuoteBtn.textContent = 'Export quote (PDF)';
+    exportQuoteBtn.textContent = 'Export Quote';
   }
 });
 
